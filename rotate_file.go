@@ -36,7 +36,7 @@ func NewRotateFile(directory string, basename string, rotateSize int, opts ...Op
 		opt(rf)
 	}
 
-	rf.Rotate()
+	rf.rotate()
 
 	return rf, nil
 }
@@ -46,13 +46,13 @@ func (r *RotateFile) Write(p []byte) (int, error) {
 	r.written += n
 
 	if r.written > r.rotateSize {
-		r.Rotate()
+		r.rotate()
 	} else {
 		r.count++
 		if r.count >= r.checkEveryN {
 			r.count = 0
 			if time.Now().After(r.lastRotate.Add(r.rotateInterval)) {
-				r.Rotate()
+				r.rotate()
 			}
 		}
 	}
@@ -69,7 +69,7 @@ func (r *RotateFile) logFileName() (string, time.Time) {
 	return r.filepath + "." + now.Format("20060102-150405.000000000") + "." + hostname + "." + fmt.Sprint(os.Getpid()) + ".log", now
 }
 
-func (r *RotateFile) Rotate() {
+func (r *RotateFile) rotate() {
 	filename, now := r.logFileName()
 
 	if now.After(r.lastRotate) {
