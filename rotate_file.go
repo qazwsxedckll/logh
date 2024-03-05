@@ -66,7 +66,7 @@ func (r *RotateFile) logFileName() (string, time.Time) {
 		hostname = "unknownhost"
 	}
 	now := time.Now()
-	return r.filepath + "." + now.Format("20060102-150405") + "." + hostname + "." + fmt.Sprint(os.Getpid()) + ".log", now
+	return r.filepath + "." + now.Format("20060102-150405.000000000") + "." + hostname + "." + fmt.Sprint(os.Getpid()) + ".log", now
 }
 
 func (r *RotateFile) Rotate() {
