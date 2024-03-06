@@ -3,6 +3,7 @@ package logh
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -25,8 +26,10 @@ func NewRotateFile(directory string, basename string, rotateSize int, opts ...Op
 		return nil, err
 	}
 
+	path := filepath.Join(directory, basename)
+
 	rf := &RotateFile{
-		filepath:       directory + "/" + basename,
+		filepath:       path,
 		rotateSize:     rotateSize,
 		rotateInterval: time.Hour * 24,
 		checkEveryN:    1024,
