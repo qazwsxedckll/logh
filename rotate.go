@@ -4,8 +4,8 @@ import (
 	"log/slog"
 )
 
-func NewRotateJSONHandler(directory string, basename string, rollSize int, opts *slog.HandlerOptions, options ...Option) (slog.Handler, error) {
-	file, err := NewRotateFile(directory, basename, rollSize, options...)
+func NewRotateJSONHandler(directory string, basename string, rotateSize int, opts *slog.HandlerOptions, options ...Option) (slog.Handler, error) {
+	file, err := NewRotateFile(directory, basename, rotateSize, options...)
 	if err != nil {
 		return nil, err
 	}
