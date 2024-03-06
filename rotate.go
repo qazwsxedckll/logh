@@ -1,12 +1,14 @@
 package logh
 
 import (
-	"io"
 	"log/slog"
 )
 
-func NewRotateJSONHandler(rollSize int, flushInterval int, opts *slog.HandlerOptions) (slog.Handler, error) {
-	var w io.Writer
+func NewRotateJSONHandler(directory string, basename string, rollSize int, opts *slog.HandlerOptions, options ...Option) (slog.Handler, error) {
+	file, err := NewRotateFile(directory, basename, rollSize, options...)
+	if err != nil {
+		return nil, err
+	}
 
-	return slog.NewJSONHandler(w, opts), nil
+	return slog.NewJSONHandler(file, opts), nil
 }

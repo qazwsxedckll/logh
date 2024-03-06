@@ -33,7 +33,9 @@ func NewRotateFile(directory string, basename string, rotateSize int, opts ...Op
 	}
 
 	for _, opt := range opts {
-		opt(rf)
+		if opt != nil {
+			opt(rf)
+		}
 	}
 
 	rf.rotate()

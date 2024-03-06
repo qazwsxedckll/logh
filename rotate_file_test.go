@@ -14,7 +14,7 @@ func TestNewRotateFile(t *testing.T) {
 	defer os.RemoveAll(path)
 
 	path += "/TestNewRotateFile"
-	file, err := NewRotateFile(path, "test", 10)
+	file, err := NewRotateFile(path, "test", 10, nil)
 	require.NoError(t, err)
 	require.NotNil(t, file)
 
