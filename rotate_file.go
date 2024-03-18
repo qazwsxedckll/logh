@@ -88,6 +88,7 @@ func (r *RotateFile) rotate() {
 			r.file.Close()
 		}
 		r.file = file
+		r.written = 0
 		r.lastRotate = now
 	}
 }

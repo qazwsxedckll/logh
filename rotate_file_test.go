@@ -28,17 +28,19 @@ func TestRotateSize(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(path)
 
-	file, err := NewRotateFile(path, "test", 10)
+	file, err := NewRotateFile(path, "test", 100)
 	require.NoError(t, err)
 
-	_, err = file.Write([]byte("12345678901234567890"))
-	require.NoError(t, err)
-	_, err = file.Write([]byte("12345678901234567890"))
-	require.NoError(t, err)
+	b := []byte("test\n")
+	for range 100 {
+		require.NoError(t, err)
+		_, err = file.Write(b)
+		require.NoError(t, err)
+	}
 
 	dir, err := os.ReadDir(path)
 	require.NoError(t, err)
-	require.Len(t, dir, 3)
+	require.Len(t, dir, 5)
 }
 
 func TestRotateInterval(t *testing.T) {
@@ -46,23 +48,24 @@ func TestRotateInterval(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(path)
 
-	file, err := NewRotateFile(path, "test", 1024, WithCheckEveryN(2), WithRotateInterval(1*time.Second))
+	file, err := NewRotateFile(path, "test", 1024, WithCheckEveryN(1), WithRotateInterval(100*time.Millisecond))
 	require.NoError(t, err)
 
-	_, err = file.Write([]byte("1"))
-	require.NoError(t, err)
-	_, err = file.Write([]byte("2"))
-	require.NoError(t, err)
+	b := []byte("test\n")
+	for range 5 {
+		_, err = file.Write(b)
+		require.NoError(t, err)
+	}
 
 	dir, err := os.ReadDir(path)
 	require.NoError(t, err)
 	require.Len(t, dir, 1)
 
-	time.Sleep(1 * time.Second)
-	_, err = file.Write([]byte("1"))
-	require.NoError(t, err)
-	_, err = file.Write([]byte("2"))
-	require.NoError(t, err)
+	time.Sleep(100 * time.Millisecond)
+	for range 5 {
+		_, err = file.Write(b)
+		require.NoError(t, err)
+	}
 
 	dir, err = os.ReadDir(path)
 	require.NoError(t, err)
