@@ -21,9 +21,15 @@ type RotateFile struct {
 }
 
 func NewRotateFile(directory string, basename string, rotateSize int, opts ...Option) (*RotateFile, error) {
-	err := os.MkdirAll(directory, 0o755)
-	if err != nil {
-		return nil, err
+	if directory != "" {
+		err := os.MkdirAll(directory, 0o755)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if basename == "" {
+		basename = "log"
 	}
 
 	path := filepath.Join(directory, basename)
