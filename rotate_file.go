@@ -11,9 +11,10 @@ type RotateFile struct {
 	filepath string
 	file     *os.File
 
-	rotateSize     int
-	rotateInterval time.Duration
-	checkEveryN    int
+	rotateSize       int
+	rotateInterval   time.Duration
+	rotateAtMidnight bool
+	checkEveryN      int
 
 	written    int
 	lastRotate time.Time
@@ -35,10 +36,11 @@ func NewRotateFile(directory string, basename string, rotateSize int, opts ...Op
 	path := filepath.Join(directory, basename)
 
 	rf := &RotateFile{
-		filepath:       path,
-		rotateSize:     rotateSize,
-		rotateInterval: time.Hour * 24,
-		checkEveryN:    1024,
+		filepath:         path,
+		rotateSize:       rotateSize,
+		rotateInterval:   time.Hour * 24,
+		rotateAtMidnight: false,
+		checkEveryN:      1024,
 	}
 
 	for _, opt := range opts {
@@ -62,8 +64,14 @@ func (r *RotateFile) Write(p []byte) (int, error) {
 		r.count++
 		if r.count >= r.checkEveryN {
 			r.count = 0
-			if time.Now().After(r.lastRotate.Add(r.rotateInterval)) {
-				r.rotate()
+			if r.rotateAtMidnight {
+				if time.Now().Day() != r.lastRotate.Day() {
+					r.rotate()
+				}
+			} else {
+				if time.Now().After(r.lastRotate.Add(r.rotateInterval)) {
+					r.rotate()
+				}
 			}
 		}
 	}
@@ -110,5 +118,12 @@ func WithCheckEveryN(n int) Option {
 func WithRotateInterval(d time.Duration) Option {
 	return func(r *RotateFile) {
 		r.rotateInterval = d
+	}
+}
+
+// WithRotateAtMidnight will suppress the rotateInterval
+func WithRotateAtMidnight() Option {
+	return func(r *RotateFile) {
+		r.rotateAtMidnight = true
 	}
 }
