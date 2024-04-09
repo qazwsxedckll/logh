@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/qazwsxedckll/logh/compare/v0.1.3...v1.0.0) (2024-04-09)
+
+
+### Features
+
+* add rotate at midnight ([6e66c8a](https://github.com/qazwsxedckll/logh/commit/6e66c8af46ef0b8c8b7f81b4f39dbbe959184645))
+
 ### [0.1.3](https://github.com/qazwsxedckll/logh/compare/v0.1.2...v0.1.3) (2024-03-26)
 
 
