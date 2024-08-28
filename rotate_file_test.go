@@ -71,3 +71,32 @@ func TestRotateInterval(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, dir, 2)
 }
+
+func TestCreateFileAfterRemove(t *testing.T) {
+	path, err := os.MkdirTemp("", "loghtest-TestRotateInterval")
+	require.NoError(t, err)
+	defer os.RemoveAll(path)
+
+	file, err := NewRotateFile(path, "test", 1024*1024*1024, WithCheckEveryN(3))
+	require.NoError(t, err)
+
+	b := []byte("test\n")
+	for range 5 {
+		_, err = file.Write(b)
+		require.NoError(t, err)
+	}
+
+	os.Remove(file.file.Name())
+	dir, err := os.ReadDir(path)
+	require.NoError(t, err)
+	require.Len(t, dir, 0)
+
+	for range 5 {
+		_, err = file.Write(b)
+		require.NoError(t, err)
+	}
+
+	dir, err = os.ReadDir(path)
+	require.NoError(t, err)
+	require.Len(t, dir, 1)
+}

@@ -64,6 +64,11 @@ func (r *RotateFile) Write(p []byte) (int, error) {
 		r.count++
 		if r.count >= r.checkEveryN {
 			r.count = 0
+			_, err := os.Open(r.file.Name())
+			if err != nil {
+				r.rotate()
+			}
+
 			if r.rotateAtMidnight {
 				if time.Now().Day() != r.lastRotate.Day() {
 					r.rotate()
