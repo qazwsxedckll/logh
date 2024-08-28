@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/qazwsxedckll/logh/compare/v1.0.0...v1.1.0) (2024-08-28)
+
+
+### Features
+
+* create file after remove ([29f118d](https://github.com/qazwsxedckll/logh/commit/29f118d2b195b4ccb5b5119b2ec1330fd88b9a58))
+
 ## [1.0.0](https://github.com/qazwsxedckll/logh/compare/v0.1.3...v1.0.0) (2024-04-09)
 
 
