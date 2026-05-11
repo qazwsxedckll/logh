@@ -5,17 +5,22 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
+const rotateTimestampLayout = "20060102-150405.000000000"
+
 type RotateFile struct {
 	filepath string
+	hostname string
 	file     *os.File
 
 	rotateSize       int
 	rotateInterval   time.Duration
 	rotateAtMidnight bool
 	checkEveryN      int
+	maxAge           time.Duration
 
 	written    int
 	lastRotate time.Time
@@ -36,8 +41,14 @@ func NewRotateFile(directory string, basename string, rotateSize int, opts ...Op
 
 	path := filepath.Join(directory, basename)
 
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "unknownhost"
+	}
+
 	rf := &RotateFile{
 		filepath:         path,
+		hostname:         hostname,
 		rotateSize:       rotateSize,
 		rotateInterval:   time.Hour * 24,
 		rotateAtMidnight: false,
@@ -87,12 +98,8 @@ func (r *RotateFile) Write(p []byte) (int, error) {
 }
 
 func (r *RotateFile) logFileName() (string, time.Time) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = "unknownhost"
-	}
 	now := time.Now()
-	return r.filepath + "." + now.Format("20060102-150405.000000000") + "." + hostname + "." + fmt.Sprint(os.Getpid()) + ".log", now
+	return r.filepath + "." + now.Format(rotateTimestampLayout) + "." + r.hostname + "." + fmt.Sprint(os.Getpid()) + ".log", now
 }
 
 func (r *RotateFile) rotate() {
@@ -111,6 +118,53 @@ func (r *RotateFile) rotate() {
 		r.file = file
 		r.written = 0
 		r.lastRotate = now
+
+		r.prune()
+	}
+}
+
+// prune removes rotated log files belonging to this instance (same basename and
+// hostname) whose embedded timestamp is older than maxAge. It is best-effort:
+// any glob, parse, or remove error is silently dropped so it never disrupts the
+// write path. Files whose names cannot be parsed against rotateTimestampLayout
+// (e.g. unrelated files or files from a different format version) are skipped.
+func (r *RotateFile) prune() {
+	if r.maxAge <= 0 {
+		return
+	}
+
+	pattern := r.filepath + ".*." + r.hostname + ".*.log"
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return
+	}
+
+	cutoff := time.Now().Add(-r.maxAge)
+	prefix := r.filepath + "."
+	hostMarker := "." + r.hostname + "."
+	current := ""
+	if r.file != nil {
+		current = r.file.Name()
+	}
+
+	for _, name := range matches {
+		if name == current {
+			continue
+		}
+
+		base := strings.TrimPrefix(name, prefix)
+		idx := strings.Index(base, hostMarker)
+		if idx <= 0 {
+			continue
+		}
+		ts, err := time.ParseInLocation(rotateTimestampLayout, base[:idx], time.Local)
+		if err != nil {
+			continue
+		}
+
+		if ts.Before(cutoff) {
+			_ = os.Remove(name)
+		}
 	}
 }
 
@@ -132,5 +186,16 @@ func WithRotateInterval(d time.Duration) Option {
 func WithRotateAtMidnight() Option {
 	return func(r *RotateFile) {
 		r.rotateAtMidnight = true
+	}
+}
+
+// WithMaxAge enables pruning of rotated log files older than d. Pruning runs
+// after each successful rotate. A non-positive d disables pruning. Only files
+// matching this instance's basename and hostname are considered; files whose
+// timestamp segment cannot be parsed are left alone. Errors during pruning are
+// silently ignored to avoid disrupting the write path.
+func WithMaxAge(d time.Duration) Option {
+	return func(r *RotateFile) {
+		r.maxAge = d
 	}
 }
